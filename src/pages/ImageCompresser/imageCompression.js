@@ -37,10 +37,12 @@ const ImageCompresser = () => {
         />
       </div>
       {loading ? (
-        <div>Loading...</div>
+        <div className="loader">
+            
+        </div>
       ) : compressedFile ? (
-        <div>
-          <button onClick={downloadCompressedImage}>Download Compressed Image</button>
+        <div className="py-2">
+          <button className="p-4  rounded-lg bg-emerald-400 hover:bg-emerald-600 text-yellow-50" onClick={downloadCompressedImage}>Download Compressed Image</button>
         </div>
       ) : null}
     </div>
@@ -48,3 +50,4 @@ const ImageCompresser = () => {
 };
 
 export default ImageCompresser;
+
