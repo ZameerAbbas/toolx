@@ -1,42 +1,83 @@
-import React, { useState } from 'react';
-import mammoth from 'mammoth';
-import * as html2pdf from 'html2pdf.js';
+import React, { useState } from "react";
+import { PDFDocument } from "pdf-lib";
+import { saveAs } from "file-saver";
+import Dropzone from "react-dropzone";
+
+const WordToPdf = () => {
+  const [wordFile, setWordFile] = useState(null);
+  const [pdfBytes, setPdfBytes] = useState(null);
+
+  const handleDrop = async (acceptedFiles) => {
+    const file = acceptedFiles[0];
+    setWordFile(file);
+
+    const wordBuffer = await file.arrayBuffer();
+    const pdfDoc = await PDFDocument.create();
+
+    const wordDoc = await PDFDocument.load(wordBuffer);
+    const [wordPage] = await pdfDoc.copyPages(wordDoc, [0]);
+
+    pdfDoc.addPage(wordPage);
+    const pdfBytes = await pdfDoc.save();
+
+    setPdfBytes(pdfBytes);
+  };
+
+  const handleDownload = () => {
+    if (pdfBytes) {
+      saveAs(
+        new Blob([pdfBytes], { type: "application/pdf" }),
+        "converted-document.pdf"
+      );
+    }
+  };
 
 
-function WordToPdf() {
 
-    const [wordFile, setWordFile] = useState(null);
 
-    const handleFileChange = (event) => {
-      const file = event.target.files[0];
-      setWordFile(file);
-    };
-  
-    const convertToPdf = async () => {
-      if (wordFile) {
-        // Convert Word to HTML
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const html = await mammoth.extractRawText({ arrayBuffer: e.target.result });
-          
-          // Convert HTML to PDF
-          const pdfBlob = await html2pdf(html);
-          
-          // Create a download link
-          const downloadLink = document.createElement('a');
-          downloadLink.href = URL.createObjectURL(pdfBlob);
-          downloadLink.download = 'converted_document.pdf';
-          downloadLink.click();
-        };
-        reader.readAsArrayBuffer(wordFile);
-      }
-    };
-    return (
+  console.log(handleDownload)
+
+  return (
+    <div>
+      <Dropzone onDrop={handleDrop} accept=".doc, .docx">
+        {({ getRootProps, getInputProps }) => (
+          <section>
+            <div {...getRootProps()} style={dropzoneStyle}>
+              <input {...getInputProps()} />
+              <p>
+                Drag and drop a Word document file here, or click to select one
+              </p>
+            </div>
+          </section>
+        )}
+      </Dropzone>
+
+      {wordFile && (
         <div>
-      <input type="file" accept=".docx" onChange={handleFileChange} />
-      <button onClick={convertToPdf}>Convert to PDF</button>
+          <h2>Uploaded Word Document:</h2>
+          <p>{wordFile.name}</p>
+          <button onClick={handleDownload} style={color}>
+            Download PDF
+          </button>
+        </div>
+      )}
     </div>
-    );
-}
+  );
+};
+
+const dropzoneStyle = {
+  border: "2px dashed #cccccc",
+  borderRadius: "4px",
+  padding: "20px",
+  textAlign: "center",
+  cursor: "pointer",
+};
+const color = {
+  color: "white",
+  border:"2px solid red",
+  borderRadius:"10px",
+  padding:"5px 3px"
+
+};
 
 export default WordToPdf;
